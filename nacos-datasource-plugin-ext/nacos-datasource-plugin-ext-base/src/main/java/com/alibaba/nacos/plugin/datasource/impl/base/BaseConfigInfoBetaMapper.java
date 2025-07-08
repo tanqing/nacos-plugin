@@ -17,6 +17,8 @@
 package com.alibaba.nacos.plugin.datasource.impl.base;
 
 
+import com.alibaba.nacos.common.utils.CollectionUtils;
+import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
 import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
 import com.alibaba.nacos.plugin.datasource.dialect.DatabaseDialect;
 import com.alibaba.nacos.plugin.datasource.impl.mysql.ConfigInfoBetaMapperByMySql;
@@ -25,6 +27,7 @@ import com.alibaba.nacos.plugin.datasource.model.MapperContext;
 import com.alibaba.nacos.plugin.datasource.model.MapperResult;
 
 import java.util.Collections;
+import java.util.List;
 
 /**
  * The base implementation of ConfigInfoBetaMapper.
@@ -52,12 +55,15 @@ public class BaseConfigInfoBetaMapper extends ConfigInfoBetaMapperByMySql {
     public MapperResult findAllConfigInfoBetaForDumpAllFetchRows(MapperContext context) {
         int startRow = context.getStartRow();
         int pageSize = context.getPageSize();
-        String sqlInner = getLimitPageSqlWithOffset("SELECT id FROM config_info_beta  ORDER BY id ", startRow,
+        String sqlInner = getLimitPageSqlWithOffset("SELECT id FROM "+getTableName()+"  ORDER BY id ", startRow,
                 pageSize);
         String sql =
                 " SELECT t.id,data_id,group_id,tenant_id,app_name,content,md5,gmt_modified,beta_ips,encrypted_data_key "
-                        + " FROM ( " + sqlInner + "  )" + "  g, config_info_beta t WHERE g.id = t.id ";
-        return new MapperResult(sql, Collections.emptyList());
+                        + " FROM ( " + sqlInner + "  )" + "  g, "+getTableName()+" t WHERE g.id = t.id ";
+
+        List<Object> objectList = CollectionUtils.list(startRow, pageSize);
+
+        return new MapperResult(sql,objectList);
     }
 
     @Override

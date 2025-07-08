@@ -96,7 +96,8 @@ public class BaseConfigInfoMapper extends ConfigInfoMapperByMySql {
     public MapperResult findAllConfigInfoBaseFetchRows(MapperContext context) {
         int startRow = context.getStartRow();
         int pageSize = context.getPageSize();
-        String innerSql = getLimitPageSqlWithMark(" SELECT id FROM config_info ORDER BY id ");
+//        String innerSql = getLimitPageSqlWithMark(" SELECT id FROM config_info ORDER BY id ");
+        String innerSql = getLimitPageSqlWithOffset(" SELECT id FROM config_info ORDER BY id ",startRow,pageSize);
         String sql = " SELECT t.id,data_id,group_id,content,md5" + " FROM ( " + innerSql + "  ) "
                 + " g, config_info t  WHERE g.id = t.id ";
         return new MapperResult(sql, CollectionUtils.list(startRow, pageSize));
@@ -121,11 +122,10 @@ public class BaseConfigInfoMapper extends ConfigInfoMapperByMySql {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         final Timestamp startTime = (Timestamp) context.getWhereParameter(FieldConstant.START_TIME);
         final Timestamp endTime = (Timestamp) context.getWhereParameter(FieldConstant.END_TIME);
-        final long lastMaxId = (long) context.getWhereParameter(FieldConstant.LAST_MAX_ID);
-        final int pageSize = context.getPageSize();
+
         List<Object> paramList = new ArrayList<>();
-        
-        final String sqlFetchRows = "SELECT id,data_id,group_id,tenant_id,app_name,content,type,md5,gmt_modified FROM config_info WHERE ";
+
+        final String sqlFetchRows = "SELECT id,data_id,group_id,tenant_id,app_name,type,md5,gmt_modified FROM config_info WHERE ";
         String where = " 1=1 ";
         if (!StringUtils.isBlank(dataId)) {
             where += " AND data_id LIKE ? ";
@@ -135,10 +135,12 @@ public class BaseConfigInfoMapper extends ConfigInfoMapperByMySql {
             where += " AND group_id LIKE ? ";
             paramList.add(group);
         }
+
         if (!StringUtils.isBlank(tenantTmp)) {
             where += " AND tenant_id = ? ";
             paramList.add(tenantTmp);
         }
+
         if (!StringUtils.isBlank(appName)) {
             where += " AND app_name = ? ";
             paramList.add(appName);
@@ -151,9 +153,9 @@ public class BaseConfigInfoMapper extends ConfigInfoMapperByMySql {
             where += " AND gmt_modified <=? ";
             paramList.add(endTime);
         }
-        String originSql = sqlFetchRows + where + " AND id > " + lastMaxId + " ORDER BY id ASC";
-        String sql = getLimitPageSqlWithOffset(originSql, 0, pageSize);
-        return new MapperResult(sql, paramList);
+        return new MapperResult(
+                sqlFetchRows + where + " AND id > " + context.getWhereParameter(FieldConstant.LAST_MAX_ID)
+                        + " ORDER BY id ASC" + " OFFSET " + 0 + " LIMIT " + context.getPageSize(), paramList);
     }
     
     @Override

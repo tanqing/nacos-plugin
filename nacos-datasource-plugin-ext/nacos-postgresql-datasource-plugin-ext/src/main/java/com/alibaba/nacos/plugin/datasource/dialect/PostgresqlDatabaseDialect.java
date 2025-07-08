@@ -50,7 +50,7 @@ public class PostgresqlDatabaseDialect extends AbstractDatabaseDialect {
         return sql + "  OFFSET " + startOffset + " LIMIT " + pageSize;
     }
 
-    @Override
+//    @Override
     public String getFunction(String functionName) {
         return TrustedPostgresqFunctionEnum.getFunctionByName(functionName);
     }
